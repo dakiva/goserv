@@ -37,6 +37,23 @@ func TestValidateDBConfig(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func TestInvalidSSLModeDBConfig(t *testing.T) {
+	// given
+	config := DBConfig{
+		DBName:       "db",
+		SSLMode:      "foo",
+		SchemaName:   "myschema",
+		Role:         "role",
+		RolePassword: "password",
+	}
+
+	// when
+	err := config.Validate()
+
+	// then
+	assert.Error(t, err)
+}
+
 func TestDBConfigToDsn(t *testing.T) {
 	// given
 	config := &DBConfig{

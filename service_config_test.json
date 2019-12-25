@@ -1,0 +1,43 @@
+{
+  "endpoint": {
+    "hostname": "localhost",
+    "port": 8080
+  },
+  "db": {
+    "hostname": "dbhost",
+    "port": 5432,
+    "schema_name": "myschema",
+    "role": "role",
+    "role_password": "secret",
+    "dbname": "mydb",
+    "sslmode": "require",
+    "max_open_connections": 10,
+    "max_idle_connections": 5
+  },
+  "migration_db": {
+    "hostname": "dbhost",
+    "port": 5432,
+    "schema_name": "migrationschema",
+    "role": "migrationrole",
+    "role_password": "secret",
+    "dbname": "mydb",
+    "sslmode": "require",
+    "max_open_connections": 10,
+    "max_idle_connections": 5
+  },
+  "swagger": {
+    "api_path": "/apidocs.json",
+    "swagger_path": "/apidocs/",
+    "swagger_file_path": "."
+  },
+  "logging": {
+    "log_level": "DEBUG",
+    "format": "%{time} %{shortfile} %{level} %{message}",
+    "backends": [
+      {
+        "backend_name": "FILE",
+        "file_path": "/home/centos/temp.log"
+      }
+    ]
+  }
+}

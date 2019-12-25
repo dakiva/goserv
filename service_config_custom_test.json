@@ -1,0 +1,9 @@
+{
+  "endpoint": {
+    "hostname": "localhost",
+    "port": 8080
+  },
+  "custom": {
+    "log_db": true
+  }
+}
