@@ -25,8 +25,8 @@ func TestValidLoggingConfig(t *testing.T) {
 	config := &LoggingConfig{
 		LogLevel: "DEBUG",
 		Format:   "%{level} %{message}",
-		Backends: []backendConfig{
-			backendConfig{
+		Backends: []BackendConfig{
+			BackendConfig{
 				BackendName: "STDOUT",
 			},
 		},
@@ -43,8 +43,8 @@ func TestValidEmptyFormatLoggingConfig(t *testing.T) {
 	// given
 	config := &LoggingConfig{
 		LogLevel: "DEBUG",
-		Backends: []backendConfig{
-			backendConfig{
+		Backends: []BackendConfig{
+			BackendConfig{
 				BackendName: "STDOUT",
 			},
 		},
@@ -61,8 +61,8 @@ func TestInvalidLogLevelLoggingConfig(t *testing.T) {
 	// given
 	config := &LoggingConfig{
 		LogLevel: "foo",
-		Backends: []backendConfig{
-			backendConfig{
+		Backends: []BackendConfig{
+			BackendConfig{
 				BackendName: "STDOUT",
 			},
 		},
@@ -92,8 +92,8 @@ func TestInvalidBackendLoggingConfig(t *testing.T) {
 	// given
 	config := &LoggingConfig{
 		LogLevel: "ERROR",
-		Backends: []backendConfig{
-			backendConfig{
+		Backends: []BackendConfig{
+			BackendConfig{
 				BackendName: "foo",
 			},
 		},
@@ -110,8 +110,8 @@ func TestInvalidFileBackendLoggingConfig(t *testing.T) {
 	// given
 	config := &LoggingConfig{
 		LogLevel: "WARNING",
-		Backends: []backendConfig{
-			backendConfig{
+		Backends: []BackendConfig{
+			BackendConfig{
 				BackendName: "FILE",
 			},
 		},
@@ -128,8 +128,8 @@ func TestValidFileBackendLoggingConfig(t *testing.T) {
 	// given
 	config := &LoggingConfig{
 		LogLevel: "NOTICE",
-		Backends: []backendConfig{
-			backendConfig{
+		Backends: []BackendConfig{
+			BackendConfig{
 				BackendName: "FILE",
 				FilePath:    ".",
 			},

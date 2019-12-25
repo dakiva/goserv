@@ -55,8 +55,8 @@ func TestLoadServiceConfig(t *testing.T) {
 	expectedConfig.Logging = &LoggingConfig{
 		LogLevel: "DEBUG",
 		Format:   "%{time} %{shortfile} %{level} %{message}",
-		Backends: []backendConfig{
-			backendConfig{
+		Backends: []BackendConfig{
+			BackendConfig{
 				BackendName: "FILE",
 				FilePath:    "/home/centos/temp.log",
 			},

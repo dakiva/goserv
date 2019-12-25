@@ -28,7 +28,7 @@ import (
 type LoggingConfig struct {
 	LogLevel string          `json:"log_level"`
 	Format   string          `json:"format"`
-	Backends []backendConfig `json:"backends"`
+	Backends []BackendConfig `json:"backends"`
 }
 
 // Validate ensures a configuration has populated all required fields.
@@ -80,13 +80,13 @@ func (l *LoggingConfig) InitializeLogging() error {
 	return nil
 }
 
-type backendConfig struct {
+type BackendConfig struct {
 	BackendName string `json:"backend_name"`
 	FilePath    string `json:"file_path"`
 }
 
 // Returns a suitable logging backend for the backend name or an error if a backend name does not describe a logging backend.
-func (b *backendConfig) getBackend(level logging.Level) (logging.Backend, error) {
+func (b *BackendConfig) getBackend(level logging.Level) (logging.Backend, error) {
 	switch {
 	case strings.EqualFold(b.BackendName, "STDOUT"):
 		return logging.NewLogBackend(os.Stdout, "", 0), nil
