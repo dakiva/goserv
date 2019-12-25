@@ -80,6 +80,7 @@ func (l *LoggingConfig) InitializeLogging() error {
 	return nil
 }
 
+// BackendConfig represents configuration of a specific logging backend, specifically one of [STDOUT, SYSLOG, FILE]
 type BackendConfig struct {
 	BackendName string `json:"backend_name"`
 	FilePath    string `json:"file_path"`
