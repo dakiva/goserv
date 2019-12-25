@@ -84,7 +84,7 @@ func TestLoadCustomConfig(t *testing.T) {
 		if val, ok := m["log_db"]; !ok {
 			return errors.New("log_db not found")
 		} else if logDB, ok2 := val.(bool); !ok2 || !logDB {
-			return errors.New("log_db not found")
+			return errors.New("log_db was false")
 		}
 		return nil
 	}
