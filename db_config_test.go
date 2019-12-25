@@ -23,6 +23,30 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestEmptyDBConfig(t *testing.T) {
+	// given
+	config := DBConfig{}
+
+	// when
+	isEmpty := config.Empty()
+
+	// then
+	assert.True(t, isEmpty)
+}
+
+func TestNonEmptyDBConfig(t *testing.T) {
+	// given
+	config := DBConfig{
+		Role: "role",
+	}
+
+	// when
+	isEmpty := config.Empty()
+
+	// then
+	assert.False(t, isEmpty)
+}
+
 func TestValidateDBConfig(t *testing.T) {
 	// given
 	config := DBConfig{

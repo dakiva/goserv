@@ -135,3 +135,17 @@ func (d *DBConfig) OpenDB() (*sqlx.DB, error) {
 	db.SetMaxIdleConns(d.MaxIdleConnections)
 	return db, nil
 }
+
+// Empty returns true if this DBConfig represents an empty configuration
+func (d *DBConfig) Empty() bool {
+	return d.Hostname == "" &&
+		d.Port == 0 &&
+		d.MaxIdleConnections == 0 &&
+		d.MaxOpenConnections == 0 &&
+		d.DBName == "" &&
+		d.SSLMode == "" &&
+		d.ConnectTimeout == 0 &&
+		d.SchemaName == "" &&
+		d.Role == "" &&
+		d.RolePassword == ""
+}
