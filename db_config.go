@@ -17,11 +17,53 @@ package goserv
 import (
 	"errors"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 
 	"github.com/dakiva/dbx"
 	"github.com/jmoiron/sqlx"
 )
+
+const (
+	// DefaultMaxOpenConnections represents the default number of open database connections
+	DefaultMaxOpenConnections = 10
+	// DefaultMaxIdleConnections represents the default number of idle database connections
+	DefaultMaxIdleConnections = 10
+)
+
+// ParseDBConfig represents a configuration that is parsed from an environment variable. Returns
+// an error onky if an environment variable exists and parsing data from that environment fails. If an environment variable is not set nil is returned.
+func ParseDBConfig(dsnEnv string) (*DBConfig, error) {
+	if dsn, exists := os.LookupEnv(dsnEnv); exists {
+		m := dbx.ParseDsn(dsn)
+		port := 0
+		if p, err := strconv.Atoi(m["port"]); err == nil && p > 0 {
+			port = p
+		} else {
+			return nil, fmt.Errorf("invalid database port %s: %w", m["port"], err)
+		}
+		connectTimeout := 0
+		if timeout, err := strconv.Atoi(m["connect_timeout"]); err == nil {
+			connectTimeout = timeout
+		} else {
+			return nil, fmt.Errorf("invalid database connect_timeout %s: %w", m["connect_timeout"], err)
+		}
+		return &DBConfig{
+			Hostname:           m["host"],
+			Port:               port,
+			DBName:             m["dbname"],
+			SSLMode:            m["sslmode"],
+			ConnectTimeout:     connectTimeout,
+			SchemaName:         m["user"],
+			Role:               m["user"],
+			RolePassword:       m["password"],
+			MaxIdleConnections: DefaultMaxOpenConnections,
+			MaxOpenConnections: DefaultMaxIdleConnections,
+		}, nil
+	}
+	return nil, nil
+}
 
 // DBConfig represents database configuration that points to a specific schema and allows for connection specific settings.
 type DBConfig struct {
@@ -32,8 +74,8 @@ type DBConfig struct {
 	DBName             string `json:"dbname"`
 	SSLMode            string `json:"sslmode"`
 	ConnectTimeout     int    `json:"connect_timeout"`
-	Role               string `json:"role"`
 	SchemaName         string `json:"schema_name"`
+	Role               string `json:"role"`
 	RolePassword       string `json:"role_password"`
 }
 
@@ -43,13 +85,9 @@ func (d *DBConfig) ToDsn() string {
 	if d.Hostname != "" {
 		dsn += "host=" + d.Hostname + " "
 	}
-	if d.Port > 0 {
-		dsn += fmt.Sprintf("port=%d ", d.Port)
-	}
+	dsn += fmt.Sprintf("port=%d ", d.Port)
 	dsn += "user=" + d.Role + " "
-	if d.RolePassword != "" {
-		dsn += "password=" + d.RolePassword + " "
-	}
+	dsn += "password=" + d.RolePassword + " "
 	dsn += "dbname=" + d.DBName + " "
 	dsn += "sslmode=" + d.SSLMode + " "
 	if d.ConnectTimeout > 0 {
@@ -60,23 +98,29 @@ func (d *DBConfig) ToDsn() string {
 
 // Validate ensures a configuration has populated all required fields.
 func (d *DBConfig) Validate() error {
+	if d.Port <= 0 {
+		return errors.New("database port value must be a positive number")
+	}
 	if d.DBName == "" {
-		return errors.New("Database name must be specified")
+		return errors.New("database name must be specified")
 	}
 	if d.SSLMode != "disable" &&
 		d.SSLMode != "require" &&
 		d.SSLMode != "verify-ca" &&
 		d.SSLMode != "verify-full" {
-		return errors.New("Database SSLMode must be specified")
+		return errors.New("database sslmode must be specified with [disable, require, verify-ca, verify-full]")
 	}
 	if d.Role == "" {
-		return errors.New("Role must be specified")
+		return errors.New("role must be specified")
 	}
 	if d.SchemaName == "" {
-		return errors.New("Schema name must be specified")
+		return errors.New("schema name must be specified")
 	}
 	if d.RolePassword == "" {
-		return errors.New("Schema role password must be specified")
+		return errors.New("role password must be specified")
+	}
+	if d.MaxIdleConnections > d.MaxOpenConnections {
+		return errors.New("max idle connections cannot exceed the max number of open connections")
 	}
 	return nil
 }

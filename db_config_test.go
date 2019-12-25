@@ -15,7 +15,10 @@
 package goserv
 
 import (
+	"fmt"
+	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -23,6 +26,7 @@ import (
 func TestValidateDBConfig(t *testing.T) {
 	// given
 	config := DBConfig{
+		Port:         5432,
 		DBName:       "db",
 		SSLMode:      "disable",
 		SchemaName:   "myschema",
@@ -34,12 +38,51 @@ func TestValidateDBConfig(t *testing.T) {
 	err := config.Validate()
 
 	// then
-	assert.Nil(t, err)
+	assert.NoError(t, err)
+}
+
+func TestInvalidPortDBConfig(t *testing.T) {
+	// given
+	config := DBConfig{
+		Port:         0,
+		DBName:       "db",
+		SSLMode:      "disable",
+		SchemaName:   "myschema",
+		Role:         "role",
+		RolePassword: "password",
+	}
+
+	// when
+	err := config.Validate()
+
+	// then
+	assert.Error(t, err)
+}
+
+func TestInvalidMaxIdleConnectionsDBConfig(t *testing.T) {
+	// given
+	config := DBConfig{
+		Port:               5432,
+		DBName:             "db",
+		SSLMode:            "disable",
+		SchemaName:         "myschema",
+		Role:               "role",
+		RolePassword:       "password",
+		MaxIdleConnections: 10,
+		MaxOpenConnections: 9,
+	}
+
+	// when
+	err := config.Validate()
+
+	// then
+	assert.Error(t, err)
 }
 
 func TestInvalidSSLModeDBConfig(t *testing.T) {
 	// given
 	config := DBConfig{
+		Port:         5432,
 		DBName:       "db",
 		SSLMode:      "foo",
 		SchemaName:   "myschema",
@@ -77,6 +120,7 @@ func TestDBConfigToDsn(t *testing.T) {
 func TestRequiredDBConfigToDsn(t *testing.T) {
 	// given
 	config := &DBConfig{
+		Port:         5432,
 		DBName:       "db",
 		SSLMode:      "disable",
 		SchemaName:   "myschema",
@@ -88,5 +132,62 @@ func TestRequiredDBConfigToDsn(t *testing.T) {
 	dsn := config.ToDsn()
 
 	// then
-	assert.Equal(t, "user=role password=secret dbname=db sslmode=disable", dsn)
+	assert.Equal(t, "port=5432 user=role password=secret dbname=db sslmode=disable", dsn)
+}
+
+func TestParseDBConfigEmptyDsn(t *testing.T) {
+	// given
+	dsnEnv := fmt.Sprintf("testdsn%d", time.Now().Unix())
+
+	// when
+	config, err := ParseDBConfig(dsnEnv)
+
+	// then
+	assert.NoError(t, err)
+	assert.Nil(t, config)
+}
+
+func TestParseDBConfigBadEnv(t *testing.T) {
+	// given
+	dsnEnv := fmt.Sprintf("testdsn%d", time.Now().Unix())
+	err := os.Setenv(dsnEnv, "host=localhost port=foo")
+	assert.NoError(t, err)
+	defer os.Unsetenv(dsnEnv)
+
+	// when
+	config, err := ParseDBConfig(dsnEnv)
+
+	// then
+	assert.Error(t, err)
+	assert.Nil(t, config)
+}
+
+func TestParseDBConfig(t *testing.T) {
+	// given
+	dsnEnv := fmt.Sprintf("testdsn%d", time.Now().Unix())
+	expectedConfig := &DBConfig{
+		Hostname:           "localhost",
+		Port:               5432,
+		DBName:             "mydb",
+		SSLMode:            "verify-full",
+		ConnectTimeout:     40,
+		SchemaName:         "myservice",
+		Role:               "myservice",
+		RolePassword:       "secret",
+		MaxOpenConnections: DefaultMaxOpenConnections,
+		MaxIdleConnections: DefaultMaxIdleConnections,
+	}
+
+	err := os.Setenv(dsnEnv, expectedConfig.ToDsn())
+	assert.NoError(t, err)
+	defer os.Unsetenv(dsnEnv)
+
+	// when
+	config, err := ParseDBConfig(dsnEnv)
+
+	// then
+	assert.NoError(t, err)
+	assert.NoError(t, config.Validate())
+	assert.Equal(t, expectedConfig, config)
+	assert.Equal(t, expectedConfig.ToDsn(), config.ToDsn())
 }
