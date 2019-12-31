@@ -38,7 +38,7 @@ func (r *ResourceNotFoundError) Error() string {
 	if r.Err != nil {
 		message = r.Err.Error()
 	}
-	return fmt.Sprintf("%v resource: %v not found: %v", r.ResourceTypeName, r.ResourceID, message)
+	return fmt.Sprintf("%v resource %v not found: %v", r.ResourceTypeName, r.ResourceID, message)
 }
 
 // Unwrap returns the underlying error
@@ -49,7 +49,6 @@ func (r *ResourceNotFoundError) StatusCode() int { return http.StatusNotFound }
 
 // DuplicateResourceError represents a duplicate resource signal (409) typically raised on resource creation
 type DuplicateResourceError struct {
-	ResourceID       string
 	ResourceTypeName string
 	Err              error
 }
@@ -60,14 +59,14 @@ func (d *DuplicateResourceError) Error() string {
 	if d.Err != nil {
 		message = d.Err.Error()
 	}
-	return fmt.Sprintf("%v resource: %v already exists: %v", d.ResourceTypeName, d.ResourceID, message)
+	return fmt.Sprintf("%v resource already exists: %v", d.ResourceTypeName, message)
 }
 
 // Unwrap returns the underlying error
 func (d *DuplicateResourceError) Unwrap() error { return d.Err }
 
 // StatusCode returns the HTTP status code appropriate for the error type
-func (d *DuplicateResourceError) StatusCode() int { return http.StatusNotFound }
+func (d *DuplicateResourceError) StatusCode() int { return http.StatusConflict }
 
 // UnauthorizedError represents unauthorized access to the system
 type UnauthorizedError struct {
