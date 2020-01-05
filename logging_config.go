@@ -24,11 +24,26 @@ import (
 	"github.com/op/go-logging"
 )
 
+// DefaultLoggingConfig represents a suitable logging default for development
+var DefaultLoggingConfig = LoggingConfig{
+	LogLevel:    "DEBUG",
+	LogDB:       true,
+	LogEndpoint: true,
+	Format:      "%{time} %{shortfile} %{level} %{message}",
+	Backends: []BackendConfig{
+		{
+			BackendName: "STDOUT",
+		},
+	},
+}
+
 // LoggingConfig contains configuration for op/go-logging
 type LoggingConfig struct {
-	LogLevel string          `json:"log_level"`
-	Format   string          `json:"format"`
-	Backends []BackendConfig `json:"backends"`
+	LogLevel    string          `json:"log_level"`
+	LogDB       bool            `json:"log_db"`
+	LogEndpoint bool            `json:"log_endpoint"`
+	Format      string          `json:"format"`
+	Backends    []BackendConfig `json:"backends"`
 }
 
 // Validate ensures a configuration has populated all required fields.
