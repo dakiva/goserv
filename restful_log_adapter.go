@@ -22,6 +22,14 @@ type RestfulLogAdapter struct {
 	logEndpoint bool
 }
 
+// NewRestfulLogAdapter constructs and returns a new instance
+func NewRestfulLogAdapter(logger *logging.Logger, logEndpoint bool) *RestfulLogAdapter {
+	return &RestfulLogAdapter{
+		logger:      logger,
+		logEndpoint: logEndpoint,
+	}
+}
+
 // Print adapts the print call to a debug log
 func (r *RestfulLogAdapter) Print(v ...interface{}) {
 	if r.logEndpoint {
