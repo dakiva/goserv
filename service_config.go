@@ -19,14 +19,6 @@ import (
 	"os"
 )
 
-const (
-	endpointKey    = "endpoint"
-	dbKey          = "db"
-	migrationDBKey = "migration_db"
-	loggingKey     = "logging"
-	swaggerKey     = "swagger"
-)
-
 // LoadServiceConfig loads configuration from a file containing configuration in JSON.
 func LoadServiceConfig(fileName string, output *ServiceConfig) error {
 	file, err := os.Open(fileName)
