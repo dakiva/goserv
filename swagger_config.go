@@ -50,9 +50,9 @@ func (s *SwaggerConfig) Validate() error {
 }
 
 // InstallSwaggerService sets up and installs the swagger service
-func (s *SwaggerConfig) InstallSwaggerService(info *spec.Info) {
+func (s *SwaggerConfig) InstallSwaggerService(info *spec.Info, webServices []*restful.WebService) {
 	config := openapi.Config{
-		WebServices: restful.RegisteredWebServices(),
+		WebServices: webServices,
 		APIPath:     s.APIPath,
 		PostBuildSwaggerObjectHandler: func(swo *spec.Swagger) {
 			swo.Info = info
