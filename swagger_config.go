@@ -58,5 +58,5 @@ func (s *SwaggerConfig) InstallSwaggerService(info *spec.Info, container *restfu
 			swo.Info = info
 		}}
 	container.Add(openapi.NewOpenAPIService(config))
-	http.Handle(s.SwaggerPath, http.StripPrefix(s.SwaggerPath, http.FileServer(http.Dir(s.SwaggerFilePath))))
+	container.ServeMux.Handle(s.SwaggerPath, http.StripPrefix(s.SwaggerPath, http.FileServer(http.Dir(s.SwaggerFilePath))))
 }
