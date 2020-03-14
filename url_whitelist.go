@@ -37,30 +37,32 @@ func NewURLWhiteList() *URLWhiteList {
 
 // AddURL adds an URL and its mapped request methods. If no methods are specified, any request method is allowed.
 func (u *URLWhiteList) AddURL(url string, requestMethods ...string) {
+	normalizedMethods := make([]string, len(requestMethods))
 	for i := 0; i < len(requestMethods); i++ {
-		requestMethods[i] = strings.ToLower(requestMethods[i])
+		normalizedMethods[i] = strings.ToLower(requestMethods[i])
 	}
-	u.urlMappings[normalizeURL(url)] = requestMethods
+	u.urlMappings[normalizeURL(url)] = normalizedMethods
 }
 
 // AcceptAll accepts all URLs for request methods. (ie if passing "OPTIONS", any options request is whitelisted)
 func (u *URLWhiteList) AcceptAll(requestMethods ...string) {
+	normalizedMethods := make([]string, len(requestMethods))
 	for i := 0; i < len(requestMethods); i++ {
-		requestMethods[i] = strings.ToLower(requestMethods[i])
+		normalizedMethods[i] = strings.ToLower(requestMethods[i])
 	}
-	u.acceptAllMethods = requestMethods
+	u.acceptAllMethods = normalizedMethods
 }
 
 // Match returns true if the url and requestMethod specified is a match, false otherwise.
 func (u *URLWhiteList) Match(url string, requestMethod string) bool {
-	requestMethod = strings.ToLower(requestMethod)
-	if methodMatch(u.acceptAllMethods, requestMethod) {
+	normalizedMethod := strings.ToLower(requestMethod)
+	if methodMatch(u.acceptAllMethods, normalizedMethod) {
 		return true
 	}
 	url = normalizeURL(url)
 	// first try brute force match
 	if methods, ok := u.urlMappings[url]; ok {
-		return len(methods) == 0 || methodMatch(methods, requestMethod)
+		return len(methods) == 0 || methodMatch(methods, normalizedMethod)
 	}
 	urlValues := strings.Split(url, "/")
 	numValues := len(urlValues)
@@ -77,7 +79,7 @@ func (u *URLWhiteList) Match(url string, requestMethod string) bool {
 		}
 		if allMatch {
 			// if no methods specified, accept any method
-			return len(methods) == 0 || methodMatch(methods, requestMethod)
+			return len(methods) == 0 || methodMatch(methods, normalizedMethod)
 		}
 	}
 	return false
