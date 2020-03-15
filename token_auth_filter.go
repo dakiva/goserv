@@ -15,9 +15,15 @@
 package goserv
 
 import (
+	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/emicklei/go-restful"
+)
+
+const (
+	authorizationHeader = "Authorization"
 )
 
 // TokenAuthFilter represents a go-restful authentication filter that validates a JWT-Token passed via an http header parameter. There is an additional optionalwWhitelist that may be set, allowing specific urls, methods, or url patterns to opt-out of authentication.
@@ -31,11 +37,24 @@ func (t *TokenAuthFilter) Filter(request *restful.Request, response *restful.Res
 	if t.URLWhiteList != nil && t.URLWhiteList.Match(request.Request.URL.String(), request.Request.Method) {
 		chain.ProcessFilter(request, response)
 	} else {
-		token := request.HeaderParameter("Authorization")
-		if err := t.TokenManager.ValidateToken(token); err != nil {
+		if token, err := parseToken(request.HeaderParameter(authorizationHeader)); err != nil {
+			http.Error(response, "Not Authorized", http.StatusUnauthorized)
+		} else if tokenErr := t.TokenManager.ValidateToken(token); tokenErr != nil {
 			http.Error(response, "Not Authorized", http.StatusUnauthorized)
 		} else {
 			chain.ProcessFilter(request, response)
 		}
 	}
+}
+
+func parseToken(value string) (string, error) {
+	parts := strings.Split(value, " ")
+	if len(parts) != 2 {
+		return "", errors.New("authorization header does not contain a valid a bearer token")
+	} else if parts[0] != "Bearer" {
+		return "", errors.New("authorization header does not contain a valid a bearer token")
+	} else if len(parts[1]) <= 0 {
+		return "", errors.New("authorization header does not contain a valid a bearer token")
+	}
+	return parts[1], nil
 }

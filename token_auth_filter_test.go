@@ -15,6 +15,7 @@
 package goserv
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
@@ -80,6 +81,43 @@ func TestInvalidAccess(t *testing.T) {
 	assert.False(t, targetFuncCalled)
 }
 
+func TestInvalidHeader(t *testing.T) {
+	// given
+	urlList := NewURLWhiteList()
+	urlList.AddURL("/", "GET")
+	manager := NewTokenManager([]byte("8831dcf1c522debbdc187f909f52b743f0028777c29517ab12938a624fc4ed12"), 60)
+	token, err := manager.CreateToken()
+	assert.NoError(t, err)
+	authFilter := &TokenAuthFilter{
+		URLWhiteList: urlList,
+		TokenManager: manager,
+	}
+
+	url, _ := url.Parse("/home")
+	req := restful.NewRequest(&http.Request{
+		URL:    url,
+		Method: "GET",
+	})
+	req.Request.Header = make(map[string][]string, 0)
+	req.Request.Header.Add(authorizationHeader, token)
+
+	resp := &restful.Response{
+		ResponseWriter: NoopResponseWriter{},
+	}
+
+	// when
+	targetFuncCalled := false
+	chain := &restful.FilterChain{
+		Target: func(*restful.Request, *restful.Response) {
+			targetFuncCalled = true
+		},
+	}
+	authFilter.Filter(req, resp, chain)
+
+	// then
+	assert.False(t, targetFuncCalled)
+}
+
 func TestValidAccess(t *testing.T) {
 	// given
 	urlList := NewURLWhiteList()
@@ -98,7 +136,7 @@ func TestValidAccess(t *testing.T) {
 		Method: "GET",
 	})
 	req.Request.Header = make(map[string][]string, 0)
-	req.Request.Header.Add("Authorization", token)
+	req.Request.Header.Add(authorizationHeader, fmt.Sprintf("Bearer %v", token))
 
 	// when
 	targetFuncCalled := false
