@@ -50,12 +50,14 @@ func (s *SwaggerConfig) Validate() error {
 }
 
 // InstallSwaggerService sets up and installs the swagger service
-func (s *SwaggerConfig) InstallSwaggerService(info *spec.Info, container *restful.Container) {
+func (s *SwaggerConfig) InstallSwaggerService(info *spec.Info, securityDefinitions spec.SecurityDefinitions, security []map[string][]string, container *restful.Container) {
 	config := openapi.Config{
 		WebServices: container.RegisteredWebServices(),
 		APIPath:     s.APIPath,
 		PostBuildSwaggerObjectHandler: func(swo *spec.Swagger) {
 			swo.Info = info
+			swo.SecurityDefinitions = securityDefinitions
+			swo.Security = security
 		}}
 	container.Add(openapi.NewOpenAPIService(config))
 	container.ServeMux.Handle(s.SwaggerPath, http.StripPrefix(s.SwaggerPath, http.FileServer(http.Dir(s.SwaggerFilePath))))
