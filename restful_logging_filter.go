@@ -70,7 +70,7 @@ func (r *RestfulLoggingFilter) Filter(request *restful.Request, response *restfu
 	if r.logger.IsEnabledFor(logging.DEBUG) {
 		headerStr := ""
 		for k, v := range request.Request.Header {
-			if strings.EqualFold(k, "access-token") {
+			if strings.EqualFold(k, authorizationHeader) {
 				headerStr = headerStr + fmt.Sprintf("\t%v:\t[hidden]\n", k)
 			} else {
 				headerStr = headerStr + fmt.Sprintf("\t%v:\t%v\n", k, v)
@@ -80,10 +80,12 @@ func (r *RestfulLoggingFilter) Filter(request *restful.Request, response *restfu
 	}
 
 	chain.ProcessFilter(request, response)
-	if response.StatusCode() >= 400 {
-		if r.logger.IsEnabledFor(logging.ERROR) {
-			r.logger.Errorf(r.responseLogFormat, request.Request.Method, request.Request.URL, response.StatusCode(), time.Now().Sub(start))
+	if response.StatusCode() >= 400 && r.logger.IsEnabledFor(logging.ERROR) {
+		headerStr := ""
+		for k, v := range response.Header() {
+			headerStr = headerStr + fmt.Sprintf("\t%v:\t%v\n", k, v)
 		}
+		r.logger.Errorf(r.responseLogFormat, request.Request.Method, request.Request.URL, response.StatusCode(), time.Now().Sub(start), headerStr)
 	} else if r.logger.IsEnabledFor(logging.DEBUG) {
 		headerStr := ""
 		for k, v := range response.Header() {
