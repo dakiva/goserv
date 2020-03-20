@@ -32,18 +32,18 @@ func LoadServiceConfig(fileName string, output *ServiceConfig) error {
 
 // ServiceConfig represents a configuration suitable for fully configuration a service.
 type ServiceConfig struct {
-	Endpoint        *EndpointConfig        `json:"endpoint"`
-	DB              *DBConfig              `json:"db"`
-	MigrationDB     *DBConfig              `json:"migration_db"`
-	Swagger         *SwaggerConfig         `json:"swagger"`
-	Logging         *LoggingConfig         `json:"logging"`
-	Custom          map[string]interface{} `json:"custom"`
-	customValidator func(map[string]interface{}) error
+	Endpoint            *EndpointConfig            `json:"endpoint"`
+	DB                  *DBConfig                  `json:"db"`
+	MigrationDB         *DBConfig                  `json:"migration_db"`
+	Swagger             *SwaggerConfig             `json:"swagger"`
+	Logging             *LoggingConfig             `json:"logging"`
+	OAuth2Service       *OAuth2ServiceConfig       `json:"oauth2_service"`
+	OpenIDConnectClient *OpenIDConnectClientConfig `json:"openid_connect_client"`
 }
 
 // NewServiceConfig intializes a new instance
 func NewServiceConfig() *ServiceConfig {
-	return &ServiceConfig{Custom: make(map[string]interface{})}
+	return &ServiceConfig{}
 }
 
 // Validate validates a configuration, returning an error signaling invalid configuration
@@ -68,13 +68,20 @@ func (s *ServiceConfig) Validate() error {
 			return err
 		}
 	}
-	if s.customValidator != nil {
-		return s.customValidator(s.Custom)
+	if s.Logging != nil {
+		if err := s.Logging.Validate(); err != nil {
+			return err
+		}
+	}
+	if s.OAuth2Service != nil {
+		if err := s.OAuth2Service.Validate(); err != nil {
+			return err
+		}
+	}
+	if s.OpenIDConnectClient != nil {
+		if err := s.OpenIDConnectClient.Validate(); err != nil {
+			return err
+		}
 	}
 	return nil
-}
-
-// SetCustomValidator sets a function that is executed during validation that validates any custom configuration
-func (s *ServiceConfig) SetCustomValidator(f func(map[string]interface{}) error) {
-	s.customValidator = f
 }

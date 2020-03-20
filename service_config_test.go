@@ -15,7 +15,6 @@
 package goserv
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -62,7 +61,18 @@ func TestLoadServiceConfig(t *testing.T) {
 			},
 		},
 	}
-
+	expectedConfig.OAuth2Service = &OAuth2ServiceConfig{
+		AuthorizationURL:      "http://localhost/authorize",
+		TokenURL:              "http://localhost/token",
+		AccessTokenExpiration: 3600,
+		AccessTokenPrivateKey: "secret",
+	}
+	expectedConfig.OpenIDConnectClient = &OpenIDConnectClientConfig{
+		ClientID:     "client123",
+		ClientSecret: "secret",
+		Issuer:       "http://account.example.com",
+		RedirectURL:  "http://localhost/authorize/callback",
+	}
 	// when
 	config := &ServiceConfig{}
 	err := LoadServiceConfig("service_config_test.json", config)
@@ -71,33 +81,6 @@ func TestLoadServiceConfig(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, expectedConfig, config)
 
-	err = config.Validate()
-	assert.NoError(t, err)
-}
-
-func TestLoadCustomConfig(t *testing.T) {
-	// given
-	expectedConfig := NewServiceConfig()
-	expectedConfig.Endpoint = &EndpointConfig{Hostname: "localhost", Port: 8080}
-	expectedConfig.Custom["log_db"] = true
-	validatorFunc := func(m map[string]interface{}) error {
-		if val, ok := m["log_db"]; !ok {
-			return errors.New("log_db not found")
-		} else if logDB, ok2 := val.(bool); !ok2 || !logDB {
-			return errors.New("log_db was false")
-		}
-		return nil
-	}
-
-	// when
-	config := NewServiceConfig()
-	err := LoadServiceConfig("service_config_custom_test.json", config)
-
-	// then
-	assert.NoError(t, err)
-	assert.Equal(t, expectedConfig, config)
-
-	config.SetCustomValidator(validatorFunc)
 	err = config.Validate()
 	assert.NoError(t, err)
 }

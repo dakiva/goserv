@@ -39,5 +39,17 @@
         "file_path": "/home/centos/temp.log"
       }
     ]
+  },
+  "oauth2_service": {
+    "authorization_url": "http://localhost/authorize",
+    "token_url": "http://localhost/token",
+    "access_token_expiration": 3600,
+    "access_token_private_key": "secret"
+  },
+  "openid_connect_client": {
+    "client_id": "client123",
+    "client_secret": "secret",
+    "issuer": "http://account.example.com",
+    "redirect_url": "http://localhost/authorize/callback"
   }
 }
