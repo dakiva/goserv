@@ -64,3 +64,8 @@ func (t *TokenManager) CreateToken() (string, error) {
 	}
 	return tokenString, nil
 }
+
+// TokenExpiration returns the token expiration value (in seconds)
+func (t *TokenManager) TokenExpiration() int {
+	return t.tokenExpiration
+}
