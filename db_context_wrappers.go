@@ -18,6 +18,7 @@ import (
 	"database/sql"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/dakiva/dbx"
 	"github.com/jmoiron/sqlx"
@@ -62,26 +63,29 @@ type loggableDBContext struct {
 }
 
 func (l *loggableDBContext) NamedExec(query string, arg interface{}) (sql.Result, error) {
-	if l.logDB {
-		l.logger.Debugf("[named exec statement]: %v [arg]: %v", query, arg)
-	}
+	start := time.Now()
 	res, err := l.ctx.NamedExec(query, arg)
+	if l.logDB {
+		l.logger.Debugf("[named exec time=%s]:%s [arg]:%v", time.Now().Sub(start), query, arg)
+	}
 	return res, interpretDBError(err, l.logDB, l.logger)
 }
 
 func (l *loggableDBContext) NamedQuery(query string, arg interface{}) (*sqlx.Rows, error) {
-	if l.logDB {
-		l.logger.Debugf("[named query statement]: %v [arg]: %v", query, arg)
-	}
+	start := time.Now()
 	res, err := l.ctx.NamedQuery(query, arg)
+	if l.logDB {
+		l.logger.Debugf("[named query time=%s]:%s [arg]:%v", time.Now().Sub(start), query, arg)
+	}
 	return res, interpretDBError(err, l.logDB, l.logger)
 }
 
 func (l *loggableDBContext) PrepareNamed(query string) (*sqlx.NamedStmt, error) {
-	if l.logDB {
-		l.logger.Debugf("[preparing statement]: %v", query)
-	}
+	start := time.Now()
 	res, err := l.ctx.PrepareNamed(query)
+	if l.logDB {
+		l.logger.Debugf("[preparing time=%s]:%s", time.Now().Sub(start), query)
+	}
 	return res, interpretDBError(err, l.logDB, l.logger)
 }
 
@@ -92,47 +96,54 @@ type loggableDBTxContext struct {
 }
 
 func (l *loggableDBTxContext) Commit() error {
+	start := time.Now()
+	err := l.tx.Commit()
 	if l.logDB {
-		l.logger.Debugf("[tx] commit")
+		l.logger.Debugf("[tx commit time=%s]", time.Now().Sub(start))
 	}
-	return l.tx.Commit()
+	return err
 }
 
 func (l *loggableDBTxContext) Rollback() error {
+	start := time.Now()
+	err := l.tx.Rollback()
 	if l.logDB {
-		l.logger.Debugf("[tx] rollback")
+		l.logger.Debugf("[tx rollback time=%s]", time.Now().Sub(start))
 	}
-	return l.tx.Rollback()
+	return err
 }
 
 func (l *loggableDBTxContext) NamedExec(query string, arg interface{}) (sql.Result, error) {
-	if l.logDB {
-		l.logger.Debugf("[tx] [named exec statement]: %v [arg]: %v", query, arg)
-	}
+	start := time.Now()
 	res, err := l.tx.NamedExec(query, arg)
+	if l.logDB {
+		l.logger.Debugf("[tx named exec time=%s]:%s [arg]:%v", time.Now().Sub(start), query, arg)
+	}
 	return res, interpretDBError(err, l.logDB, l.logger)
 }
 
 func (l *loggableDBTxContext) NamedQuery(query string, arg interface{}) (*sqlx.Rows, error) {
-	if l.logDB {
-		l.logger.Debugf("[tx] [named query statement]: %v [arg]: %v", query, arg)
-	}
+	start := time.Now()
 	res, err := l.tx.NamedQuery(query, arg)
+	if l.logDB {
+		l.logger.Debugf("[tx named query time=%s]:%s [arg]:%v", time.Now().Sub(start), query, arg)
+	}
 	return res, interpretDBError(err, l.logDB, l.logger)
 }
 
 func (l *loggableDBTxContext) PrepareNamed(query string) (*sqlx.NamedStmt, error) {
-	if l.logDB {
-		l.logger.Debugf("[tx] [preparing statement]: %v", query)
-	}
+	start := time.Now()
 	res, err := l.tx.PrepareNamed(query)
+	if l.logDB {
+		l.logger.Debugf("[tx preparing time=%s]:%s", time.Now().Sub(start), query)
+	}
 	return res, interpretDBError(err, l.logDB, l.logger)
 }
 
 func interpretDBError(err error, logDB bool, logger *logging.Logger) error {
 	if err != nil {
 		if logDB {
-			logger.Debugf("[db error]: %v", err)
+			logger.Debugf("[db error]:%v", err)
 		}
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == pqUniqueViolationCode {
 			// use the table name as the resource type name
