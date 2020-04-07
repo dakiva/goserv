@@ -20,6 +20,7 @@ import "errors"
 type OAuth2ServiceConfig struct {
 	AuthorizationURL      string `json:"authorization_url"`
 	TokenURL              string `json:"token_url"`
+	RedirectURL           string `json:"redirect_url"`
 	AccessTokenExpiration int    `json:"access_token_expiration"`
 	AccessTokenPrivateKey string `json:"access_token_private_key"`
 }
